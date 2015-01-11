@@ -1,0 +1,11 @@
+# protect functions.php
+<files functions.php>
+order allow,deny
+deny from all
+</files>
+
+<Files ~ "^.*\.([Hh][Tt][Aa])">
+order allow,deny
+deny from all
+satisfy all
+</Files>
