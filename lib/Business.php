@@ -56,7 +56,7 @@ class Business {
 			global $pdo;
 			connect();
 			
-			$stmt = $pdo->prepare('SELECT id, name, type, photo, address, address2, city, state, zip, description FROM business where id = :id');
+			$stmt = $pdo->prepare('SELECT id, name, type, photo, address, city, state, zip, description FROM business where id = :id');
 			$pdo = null;
 			$stmt->execute( array( 'id' => $id ) );
 			

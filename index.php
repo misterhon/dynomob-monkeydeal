@@ -1,6 +1,5 @@
 <?php
 
-
 include 'lib/Business.php';
 include 'lib/Deal.php';
 

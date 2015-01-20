@@ -23,3 +23,4 @@
 </head>
 <body>
 <div class="container">
+	<div>*All information are outdated.</div>
