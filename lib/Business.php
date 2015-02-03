@@ -14,13 +14,13 @@ class Business {
 	public function __construct( stdClass $config ) {
 		try {
 			
-			$this->id = (int) $config->id;
-			$this->name = $config->name;
+			$this->id    = (int) $config->id;
+			$this->name  = $config->name;
 			$this->photo = $config->photo ?: 'http://www.dynomob.com/app/images/defaultpic.png';
-			$this->type = $config->type;
+			$this->type  = $config->type;
 			
 			$this->bananaCount = self::getBananaCount( $config->id );
-			$this->promoId = ( ( self::hasActiveDeal( $config->id ) ) ? Deal::getDealIdByBusinessId( $config->id ) : null );
+			$this->promoId     = ( ( self::hasActiveDeal( $config->id ) ) ? Deal::getDealIdByBusinessId( $config->id ) : null );
 			
 		} catch ( Exception $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
@@ -50,24 +50,7 @@ class Business {
 		return false;
 	}
 	
-	public static function findById( $id ) {
-		try {
-			
-			global $pdo;
-			connect();
-			
-			$stmt = $pdo->prepare('SELECT id, name, type, photo, address, city, state, zip, description FROM business where id = :id');
-			$pdo = null;
-			$stmt->execute( array( 'id' => $id ) );
-			
-			return $stmt->fetch( PDO::FETCH_OBJ );
-			
-		} catch ( PDOException $e ) {
-			echo "Error: " . $e->getMessage() . "<br>";
-			return null;
-		}
-	}
-	
+	// Search Business by name, partials are accepted
 	public static function findByName( $srch = '' ) {
 		
 		if ( $srch ) {
@@ -92,6 +75,7 @@ class Business {
 		
 	}
 	
+	// Check to see how many bananas a Business has
 	public static function getBananaCount( $bid ) {
 		try {
 			
@@ -110,6 +94,7 @@ class Business {
 		}
 	}
 
+	// Checks if the Business has any active deal
 	public static function hasActiveDeal( $bid ) {
 		try {
 		
@@ -128,10 +113,30 @@ class Business {
 		}
 	}
 	
-	
+	// Sorts an array of Businesses by bananaCount, in descending order
 	public static function sortByPopularity( $collection ) {
 		usort( $collection, 'sortByBananas' );
 		return $collection;
+	}
+
+	public static function getBusiness( $id ) {
+		try {
+			
+			global $pdo;
+			connect();
+			
+			$stmt = $pdo->prepare('SELECT id, name, type, photo FROM business where id = :id');
+			$pdo = null;
+			$stmt->execute( array( 'id' => $id ) );
+
+			$bizConfig = $stmt->fetch( PDO::FETCH_OBJ );
+
+			return new Business( $bizConfig );
+			
+		} catch ( PDOException $e ) {
+			echo "Error: " . $e->getMessage() . "<br>";
+			return null;
+		}
 	}
 	
 }

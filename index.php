@@ -29,7 +29,7 @@ if ( isset( $_POST['business_search'] ) ) {
 }
 
 if ( isXHR() && isset( $_POST['business_id'] ) ) {
-	echo json_encode( array( Business::findById( $_POST['business_id'] ) ) );
+	echo json_encode( array( Business::getBusiness( $_POST['business_id'] ) ) );
 	return;
 }
 

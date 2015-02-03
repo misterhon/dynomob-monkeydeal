@@ -23,7 +23,15 @@ include 'lib/User.php';
 
 // User::getAll()
 <?php var_dump( array_slice( User::getAll(), 6, 2 ) ); ?>
-	
+
+// User::getUser( 57 );
+<?php var_dump( User::getUser( 57 ) ); ?>
+
+// Deal::getDeal( 170 );
+<?php var_dump( Deal::getDeal( 170 ) ); ?>
+
+// Business::getBusiness( 11 );
+<?php var_dump( Business::getBusiness( 11 ) ); ?>
 </pre>
 
 <?php include '_partials/footer.php'; ?>

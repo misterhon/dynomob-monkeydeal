@@ -13,7 +13,7 @@ class Deal {
 	public function __construct( stdClass $config ) {
 		try {
 		
-			$biz = Business::findByID( $config->bid );
+			$biz = Business::getBusiness( $config->bid );
 			
 			global $pdo;
 			connect();
@@ -28,6 +28,22 @@ class Deal {
 			$this->photo = ( $stmt->fetch( PDO::FETCH_COLUMN, 0 ) ) ?: 'http://www.dynomob.com/app/images/defaultpic.png';
 			$this->isActive = ( 'active' === $config->status );
 			
+		} catch ( Exception $e ) {
+			echo "Error: " . $e->getMessage() . "<br>";
+		}
+	}
+
+	public function getUsersWhoClaimed() {
+		try {
+
+			global $pdo;
+			connect();
+
+			$stmt = $pdo->prepare('SELECT DISTINCT userId FROM claimed WHERE promId = :id');
+			$stmt->execute( array( 'id' => $this->id ) );
+
+			$pdo = null;
+
 		} catch ( Exception $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
 		}
@@ -86,7 +102,7 @@ class Deal {
 			return false;
 		}
 	}
-	
+
 	public static function getDealIdByBusinessId($bid) {
 		try {
 			
@@ -99,6 +115,26 @@ class Deal {
 			
 			return intval( $stmt->fetch( PDO::FETCH_COLUMN, 0 ) );
 			
+		} catch ( PDOException $e ) {
+			echo "Error: ".$e->getMessage()."<br>";
+			return null;
+		}
+	}
+
+	public static function getDeal( $id ) {
+		try {
+
+			global $pdo;
+			connect();
+			
+			$stmt = $pdo->prepare('SELECT id, name, businessid AS bid, status FROM promotions WHERE id = :id');
+			$pdo = null;
+			$stmt->execute( array( 'id' => $id ) );
+			
+			$dealConfig = $stmt->fetch( PDO::FETCH_OBJ );
+
+			return new Deal( $dealConfig );
+
 		} catch ( PDOException $e ) {
 			echo "Error: ".$e->getMessage()."<br>";
 			return null;

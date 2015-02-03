@@ -11,7 +11,7 @@ class User {
 	public $role;
 	
 	private static function isAdmin($id) {
-		// hardcoding admin userIDs since there are just a few:
+		// hardcoding admin userIDs since there are only a handful:
 		// (SELECT id FROM dmusers)
 		return in_array( $id, array( 3, 55, 56, 57, 68, 115, 116 ) );
 	}
@@ -42,6 +42,26 @@ class User {
 			$stmt->execute();
 			
 			return $stmt->fetchAll( PDO::FETCH_OBJ );
+			
+		} catch ( PDOException $e ) {
+			echo "Error: " . $e->getMessage() . "<br>";
+			return array();
+		}
+	}
+
+	public static function getUser( $id ) {
+		try {
+			
+			global $pdo;
+			connect();
+			
+			$stmt = $pdo->prepare('SELECT id, username AS name, sex, fbid FROM user WHERE id = :id');
+			$pdo = null;
+			$stmt->execute( array( 'id' => $id ) );
+			
+			$userConfig = $stmt->fetch( PDO::FETCH_OBJ );
+
+			return new User( $userConfig );
 			
 		} catch ( PDOException $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
