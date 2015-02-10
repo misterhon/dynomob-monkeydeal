@@ -44,6 +44,14 @@ class Deal {
 
 			$pdo = null;
 
+			$userIds = $stmt->fetchAll( PDO::FETCH_COLUMN );
+
+			foreach ( $userIds as $u ) {
+				$users[] = User::getUser( $u );
+			}
+
+			return $users;
+
 		} catch ( Exception $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
 		}

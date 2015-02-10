@@ -32,6 +32,9 @@ include 'lib/User.php';
 
 // Business::getBusiness( 11 );
 <?php var_dump( Business::getBusiness( 11 ) ); ?>
+
+// Deal::getDeal( 170 )->getUsersWhoClaimed();
+<?php var_dump( array_slice( Deal::getDeal( 170 )->getUsersWhoClaimed(), 0, 2 ) ); ?>
 </pre>
 
 <?php include '_partials/footer.php'; ?>
