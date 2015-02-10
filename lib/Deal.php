@@ -81,7 +81,7 @@ class Deal {
 			global $pdo;
 			connect();
 			
-			$stmt = $pdo->prepare('SELECT MAX(p.id) FROM promotions p INNER JOIN business b ON p.status = "active" AND p.businessId = b.id');
+			$stmt = $pdo->prepare('SELECT MAX(p.id), name, businessid AS bid, status FROM promotions p INNER JOIN business b ON p.status = "active" AND p.businessId = b.id');
 			$pdo = null;
 			$stmt->execute();
 			
