@@ -14,7 +14,6 @@ var Businesses = {
 	},
 	
 	bindEvents: function() {
-		// this.config.letterSelection.on('change', this.fetchBusinesses);
 		this.config.businessSearch.on('keyup', this.fetchBusinesses);
 		this.config.businessList.on('click', 'li', this.displayBusinessDetail);
 		this.config.businessDetail.on('click', 'span.close', this.closeOverlay);
@@ -25,8 +24,7 @@ var Businesses = {
 		this.config.businessDetailTemplate = Handlebars.compile(this.config.businessDetailTemplate);
 		
 		Handlebars.registerHelper('displayBusinessListingPhoto', function( business ) {
-			var defaultImg = 'http://dynomob.com/app/images/defaultpic.png';
-			return (business.photo.length) ? business.photo : defaultImg;
+			return (business.photo.length) ? business.photo : 'http://dynomob.com/app/images/defaultpic.png';
 		});
 		
 		Handlebars.registerHelper('displayBusinessPhoto', function( business ) {
@@ -52,7 +50,6 @@ var Businesses = {
 		$.ajax({
 			data: self.config.form.serialize(),
 			success: function(results) {
-				// console.log(self.config.businessListTemplate(results));
 				self.config.businessList.empty().append((results[0]) ? self.config.businessListTemplate(results) : '<li>No Results. <a href="" target="_self">Try again</a></li>');
 			}
 		});
@@ -65,9 +62,6 @@ var Businesses = {
 		$.ajax({
 			data: { business_id: $(this).data('business_id') },
 			success: function(results) {
-				// console.log(results);
-				// console.log(self.config.businessDetailTemplate(results));
-				// self.config.businessDetail.html((results[0]) ? self.config.businessDetailTemplate(results) : '<div>Error.</div>').slideDown(300);
 				$this.append(self.config.businessDetail);
 				self.config.businessDetail.html((results[0]) ? self.config.businessDetailTemplate(results) : '<div>Error.</div>').slideDown(300);
 			}
@@ -82,7 +76,6 @@ var Businesses = {
 };
 
 Businesses.init({
-	// letterSelection: $('#first_letter'),
 	businessSearch: $('#business_search'),
 	form: $('#business-selection'),
 	businessListTemplate: $('#business_list_template').html(),
