@@ -2,20 +2,10 @@
 
 include 'lib/Business.php';
 include 'lib/Deal.php';
-
-$req = Business::getAll();
-
-$arr = array();
-
-foreach( $req as $b ) {
-	array_push( $arr, new Business( $b ) );
-}
-
-// TO DO: Implement sorting in client-side JS.
-$biz = Business::sortByPopularity( $arr );
+include 'lib/User.php';
 
 if ( isXHR() && isset( $_POST['business'] ) ) {
-	echo json_encode( $biz );
+	echo json_encode( Business::getAll() );
 	return;
 }
 
@@ -32,5 +22,7 @@ if ( isXHR() && isset( $_POST['business_id'] ) ) {
 	echo json_encode( array( Business::getBusiness( $_POST['business_id'] ) ) );
 	return;
 }
+
+$req = Business::getAll();
 
 include 'views/index.tmpl.php';

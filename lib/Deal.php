@@ -5,29 +5,24 @@ require_once 'functions.php';
 class Deal {
 
 	public $id;
+	public $bid;
 	public $promo;
 	public $sponsor;
 	public $photo;
 	public $isActive;
 
-	public function __construct( stdClass $config ) {
+	public function __construct() {
 		try {
-		
-			$biz = Business::getBusiness( $config->bid );
-			
-			global $pdo;
-			connect();
-			
-			$stmt = $pdo->prepare('SELECT promophoto AS photo FROM business WHERE id = :id');
-			$pdo = null;
-			$stmt->execute( array( 'id' => $biz->id ) );
-			
-			$this->id = (int) $config->id;
-			$this->promo = $config->name;
+
+			$this->id       = intval( $this->id );
+			$this->bid      = intval( $this->bid );
+			$this->isActive = (bool) $this->isActive;
+			$this->photo    = $this->getPhoto( $this->bid ) ?: 'http://www.dynomob.com/app/images/defaultpic.png';
+
+			$biz = Business::getBusiness( $this->bid );
+
 			$this->sponsor = $biz->name;
-			$this->photo = ( $stmt->fetch( PDO::FETCH_COLUMN, 0 ) ) ?: 'http://www.dynomob.com/app/images/defaultpic.png';
-			$this->isActive = ( 'active' === $config->status );
-			
+
 		} catch ( Exception $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
 		}
@@ -39,19 +34,31 @@ class Deal {
 			global $pdo;
 			connect();
 
-			$stmt = $pdo->prepare('SELECT DISTINCT userId FROM claimed WHERE promId = :id');
+			$stmt = $pdo->prepare('SELECT u.id, u.username AS name, u.sex AS gender, u.fbid FROM user u INNER JOIN claimed c ON c.promId = :id AND u.id = c.userId');
 			$stmt->execute( array( 'id' => $this->id ) );
 
 			$pdo = null;
 
-			$userIds = $stmt->fetchAll( PDO::FETCH_COLUMN );
+			return $stmt->fetchAll( PDO::FETCH_CLASS, 'User' );
 
-			foreach ( $userIds as $u ) {
-				$users[] = User::getUser( $u );
-			}
+		} catch ( Exception $e ) {
+			echo "Error: " . $e->getMessage() . "<br>";
+		}
+	}
 
-			return $users;
+	private function getPhoto() {
+		try {
 
+			global $pdo;
+			connect();
+
+			$stmt = $pdo->prepare('SELECT promophoto FROM business WHERE id = :id');
+			$stmt->execute( array( 'id' => $this->bid ) );
+
+			$pdo = null;
+
+			return $stmt->fetch( PDO::FETCH_COLUMN, 0 );
+			
 		} catch ( Exception $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
 		}
@@ -63,11 +70,11 @@ class Deal {
 			global $pdo;
 			connect();
 			
-			$stmt = $pdo->prepare('SELECT id, name, businessid AS bid, status FROM promotions');
+			$stmt = $pdo->prepare('SELECT id, name AS promo, businessid AS bid, STRCMP("inactive", status) AS isActive FROM promotions');
 			$pdo = null;
 			$stmt->execute();
 			
-			return $stmt->fetchAll( PDO::FETCH_OBJ );
+			return $stmt->fetchAll( PDO::FETCH_CLASS, 'Deal' );
 			
 		} catch ( PDOException $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
@@ -81,11 +88,11 @@ class Deal {
 			global $pdo;
 			connect();
 			
-			$stmt = $pdo->prepare('SELECT MAX(p.id), name, businessid AS bid, status FROM promotions p INNER JOIN business b ON p.status = "active" AND p.businessId = b.id');
+			$stmt = $pdo->prepare('SELECT MAX(p.id), name AS promo, businessid AS bid, status FROM promotions p INNER JOIN business b ON p.status = "active" AND p.businessId = b.id');
 			$pdo = null;
 			$stmt->execute();
 			
-			return $stmt->fetchAll( PDO::FETCH_OBJ );
+			return $stmt->fetchAll( PDO::FETCH_CLASS, 'Deal' );
 			
 		} catch ( PDOException $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
@@ -107,7 +114,7 @@ class Deal {
 			
 		} catch ( PDOException $e ) {
 			echo "Error: ".$e->getMessage()."<br>";
-			return false;
+			return null;
 		}
 	}
 
@@ -135,13 +142,13 @@ class Deal {
 			global $pdo;
 			connect();
 			
-			$stmt = $pdo->prepare('SELECT id, name, businessid AS bid, status FROM promotions WHERE id = :id');
+			$stmt = $pdo->prepare('SELECT id, name, businessid AS bid, STRCMP("inactive", status) AS isActive FROM promotions WHERE id = :id');
 			$pdo = null;
+
+			$stmt->setFetchMode( PDO::FETCH_CLASS, 'Deal' );
 			$stmt->execute( array( 'id' => $id ) );
 			
-			$dealConfig = $stmt->fetch( PDO::FETCH_OBJ );
-
-			return new Deal( $dealConfig );
+			return $stmt->fetch( PDO::FETCH_CLASS );
 
 		} catch ( PDOException $e ) {
 			echo "Error: ".$e->getMessage()."<br>";

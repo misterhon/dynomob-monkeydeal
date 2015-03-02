@@ -10,18 +10,17 @@ class Business {
 	public $bananaCount;
 	public $photo;
 	public $promoId;
+	public $address;
 	
-	public function __construct( stdClass $config ) {
+	public function __construct() {
 		try {
-			
-			$this->id    = (int) $config->id;
-			$this->name  = $config->name;
-			$this->photo = $config->photo ?: 'http://www.dynomob.com/app/images/defaultpic.png';
-			$this->type  = $config->type;
-			
-			$this->bananaCount = self::getBananaCount( $config->id );
-			$this->promoId     = ( ( self::hasActiveDeal( $config->id ) ) ? Deal::getDealIdByBusinessId( $config->id ) : null );
-			
+
+			$this->id          = intval( $this->id );
+			$this->bananaCount = self::getBananaCount( $this->id );
+			$this->address     = self::getBusinessAddress( $this->id );
+			$this->photo       = $this->photo ?: 'http://www.dynomob.com/app/images/defaultpic.png';
+			$this->promoId     = ( ( self::hasActiveDeal( $this->id ) ) ? Deal::getDealIdByBusinessId( $this->id ) : null );
+
 		} catch ( Exception $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
 			die();
@@ -38,7 +37,7 @@ class Business {
 			$pdo = null;
 			$stmt->execute();
 			
-			return $stmt->fetchAll( PDO::FETCH_OBJ );
+			return $stmt->fetchAll( PDO::FETCH_CLASS, "Business" );
 			
 		} catch ( PDOException $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
@@ -47,10 +46,28 @@ class Business {
 	}
 	
 	public static function getAllOfType( $type ) {
-		return false;
+		if ( $type ) {
+			try {
+
+				global $pdo;
+				connect();
+				
+				$stmt = $pdo->prepare('SELECT id, name, type, photo FROM business WHERE type LIKE :type');
+				$pdo = null;
+				$stmt->execute( array( 'type' => "%{$type}%" ) );
+				
+				return $stmt->fetchAll( PDO::FETCH_CLASS, 'Business' );
+
+			} catch ( PDOException $e ) {
+				echo "Error: " . $e->getMessage() . "<br>";
+				return array();
+			}
+		}
+		return array();
 	}
 	
 	// Search Business by name, partials are accepted
+	// @return Array of Business objects, empty array if no results, null on error.
 	public static function findByName( $srch = '' ) {
 		
 		if ( $srch ) {
@@ -63,16 +80,40 @@ class Business {
 				$pdo = null;
 				$stmt->execute( array( 'name' => "%{$srch}%" ) );
 				
-				return $stmt->fetchAll( PDO::FETCH_OBJ );
+				return $stmt->fetchAll( PDO::FETCH_CLASS, 'Business' );
 				
 			} catch ( PDOException $e ) {
 				echo "Error: " . $e->getMessage() . "<br>";
-				return array();
+				return null;
 			}
 		}
 		
 		return self::getAll();
 		
+	}
+
+	public static function findByZipcode( $srch = '' ) {
+
+		if ( $srch ) {
+			try {
+			
+				global $pdo;
+				connect();
+				
+				$stmt = $pdo->prepare('SELECT id, name, type, photo FROM business WHERE zip = :zip ');
+				$pdo = null;
+				$stmt->execute( array( 'zip' => "%{$srch}%" ) );
+				
+				return $stmt->fetchAll( PDO::FETCH_CLASS, 'Business' );
+				
+			} catch ( PDOException $e ) {
+				echo "Error: " . $e->getMessage() . "<br>";
+				return null;
+			}
+		}
+		
+		return self::getAll();
+
 	}
 	
 	// Check to see how many bananas a Business has
@@ -86,7 +127,7 @@ class Business {
 			$pdo = null;
 			$stmt->execute( array( 'bid' => $bid ) );
 			
-			return intval( $stmt->fetch( PDO::FETCH_OBJ )->follower );
+			return intval( $stmt->fetch( PDO::FETCH_ASSOC )->follower );
 			
 		} catch ( PDOException $e ) {
 			echo "Error: ".$e->getMessage()."<br>";
@@ -112,12 +153,6 @@ class Business {
 			return false;
 		}
 	}
-	
-	// Sorts an array of Businesses by bananaCount, in descending order
-	public static function sortByPopularity( $collection ) {
-		usort( $collection, 'sortByBananas' );
-		return $collection;
-	}
 
 	public static function getBusiness( $id ) {
 		try {
@@ -125,17 +160,41 @@ class Business {
 			global $pdo;
 			connect();
 			
-			$stmt = $pdo->prepare('SELECT id, name, type, photo FROM business where id = :id');
+			$stmt = $pdo->prepare('SELECT id, name, type, photo FROM business WHERE id = :id');
 			$pdo = null;
+			$stmt->setFetchMode( PDO::FETCH_CLASS, 'Business' );
 			$stmt->execute( array( 'id' => $id ) );
 
-			$bizConfig = $stmt->fetch( PDO::FETCH_OBJ );
-
-			return new Business( $bizConfig );
+			return $stmt->fetch( PDO::FETCH_CLASS );
 			
 		} catch ( PDOException $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
 			return null;
+		}
+	}
+
+	public static function getBusinessAddress( $id ) {
+		try {
+
+			global $pdo;
+			connect();
+
+			$stmt = $pdo->prepare('SELECT address, address2, city, state, zip FROM business WHERE id = :id');
+			$pdo = null;
+			$stmt->execute( array( 'id' => $id ) );
+
+			$addr = $stmt->fetch( PDO::FETCH_ASSOC );
+
+			if ( !count( $addr ) || !$addr['address'] ) {
+				return "";
+			}
+
+			return $addr['address'] . ' ' . $addr['address2'] . ', '
+				. $addr['city'] . ', ' . $addr['state'] . ' ' . $addr['zip'];
+
+		} catch ( PDOException $e ) {
+			echo "Error: " . $e->getMessage() . "<br>";
+			return "";
 		}
 	}
 	
