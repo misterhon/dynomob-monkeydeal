@@ -22,5 +22,5 @@
 	<title>MonkeyDeal</title>
 </head>
 <body>
-<div class="container">
-	<div>*All information are outdated.</div>
+<!-- <div class="container">
+	<div>*All information are outdated.</div> -->

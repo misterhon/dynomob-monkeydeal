@@ -11,6 +11,7 @@ class Business {
 	public $photo;
 	public $promoId;
 	public $address;
+	public $location;
 	
 	public function __construct() {
 		try {
@@ -18,6 +19,7 @@ class Business {
 			$this->id          = intval( $this->id );
 			$this->bananaCount = self::getBananaCount( $this->id );
 			$this->address     = self::getBusinessAddress( $this->id );
+			$this->location    = self::getBusinessLocation( $this->id );
 			$this->photo       = $this->photo ?: 'http://www.dynomob.com/app/images/defaultpic.png';
 			$this->promoId     = ( ( self::hasActiveDeal( $this->id ) ) ? Deal::getDealIdByBusinessId( $this->id ) : null );
 
@@ -189,8 +191,33 @@ class Business {
 				return "";
 			}
 
-			return $addr['address'] . ' ' . $addr['address2'] . ', '
+			return $addr['address'] . (( $addr['address2'] ) ? ' ' . $addr['address2'] : '') . ', '
 				. $addr['city'] . ', ' . $addr['state'] . ' ' . $addr['zip'];
+
+		} catch ( PDOException $e ) {
+			echo "Error: " . $e->getMessage() . "<br>";
+			return "";
+		}
+	}
+
+	// Location is for mapping, otherwise this function is almost identical to getBusinessAddress().
+	public static function getBusinessLocation( $id ) {
+		try {
+
+			global $pdo;
+			connect();
+
+			$stmt = $pdo->prepare('SELECT address, city, state, zip FROM business WHERE id = :id');
+			$pdo = null;
+			$stmt->execute( array( 'id' => $id ) );
+
+			$addr = $stmt->fetch( PDO::FETCH_ASSOC );
+
+			if ( !count( $addr ) || !$addr['address'] ) {
+				return "";
+			}
+
+			return $addr['address'] . ', ' . $addr['city'] . ', ' . $addr['state'] . ' ' . $addr['zip'];
 
 		} catch ( PDOException $e ) {
 			echo "Error: " . $e->getMessage() . "<br>";
